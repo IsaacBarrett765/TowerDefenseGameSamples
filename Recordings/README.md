@@ -3,6 +3,7 @@
 ### InventoryDemo_01.mp4
 I recommend watching this demo first, after checking out the screenshots. This recording shows the inventory menu, where the player equips turrets and modifies them using the modular upgrade system. 
 
+Here is a youtube link if that is preferable: https://youtu.be/-kwfTmcHLcA
 ---
 
 ### GameplayDemo_01.mp4
@@ -19,3 +20,5 @@ Ghost enemy: The white ball, this enemy remains a threat for a short while after
 Speedy boss: The larger yellow ball, this enemy is the boss version of the Speedy enemy. It just has more health.
 
 Basic boss: The large red ball, this enemy has a ton of health and pretty low speed.
+
+Here is a youtube link if that is preferable: https://youtu.be/jtgY2oxjKlo
