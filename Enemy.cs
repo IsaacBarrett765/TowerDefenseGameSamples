@@ -82,7 +82,6 @@ public class Enemy : MonoBehaviour
     public Image poisonBar;
 
     public bool isDead = false;
-
     public float distanceTraveled = 0f;
 
     public void SetBulletStats(Bullet stats) => bulletStats = stats;
