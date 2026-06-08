@@ -4,7 +4,6 @@
 I recommend watching this demo first, after checking out the screenshots. This recording shows the inventory menu, where the player equips turrets and modifies them using the modular upgrade system. 
 
 Here is a youtube link if that is preferable: https://youtu.be/-kwfTmcHLcA
----
 
 ### GameplayDemo_01.mp4
 This recording shows a short level on the easiest difficulty. This is the simple gameplay loop, where the user can upgrade their towers and keep enemies from exiting the map via the red cube. The enemies shown here include:
