@@ -4,6 +4,7 @@ These are four C# scripts from a Unity tower defense game I am developing for co
 
 The game features a modular turret upgrade system, enemy wave management, multiple targeting strategies, homing projectiles, and a full save/load system — all built in Unity with C#.
 
+These scripts were written by me. AI tools were used for cleanup and readability improvements, but the architecture, game systems, and design decisions are entirely my own work.
 ---
 
 ## Scripts
@@ -18,10 +19,8 @@ Projectile behavior with optional homing. When seeking is enabled, the bullet st
 Enemy state machine covering health, speed, status effects, and special behaviors. The slow system uses a list of multiplicative factors so multiple independent slow sources combine correctly — removing one source does not clear the others. Status effects (bleed, fire, ice, poison) run as coroutines and are tracked with reference counts so stacking works without duplicating or cancelling existing ticks. Special types include: `isBerserker` (permanently gains speed each time it takes damage), `isHealer` (partially heals in response to damage), `isSummoner` (spawns additional enemies), `isTank` (damage capped per hit), and `isGhost` (plays a different death sequence instead of being destroyed immediately). Distance traveled is tracked per-enemy to support the First/Last targeting modes in `Turret.cs`.
 
 ### `WaveSpawner.cs`
-Wave management using coroutines. Each wave defines enemy types, counts, and spawn rate. Waves are sent sequentially with a configurable delay between them. Supports a `reverseMode` that iterates the wave array backwards (used for a game mode variant). The win condition checks both that all wave coroutines have finished and that no living enemies remain on the field, polling active enemy tags rather than relying on a counter alone to avoid false wins from edge-case timing.
+Wave management using coroutines. Each wave defines enemy types, counts, and spawn rate. Waves are sent sequentially with a configurable delay between them. Supports a yet-to-be-fleshed-out gamemode, `reverseMode`, that will iterate the wave array backwards. The win condition checks both that all wave coroutines have finished and that no living enemies remain on the field, polling active enemy tags rather than relying on a counter alone to avoid false wins from edge-case timing.
 
 ---
 
 *This project is in active development and not yet released. Full source is not available.*
-
-*Note: I am the original author of these scripts. I used AI tools (ChatGPT/Claude) to help with code cleanup and polish.*
