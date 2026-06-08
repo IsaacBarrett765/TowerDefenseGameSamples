@@ -8,14 +8,13 @@ public class Enemy : MonoBehaviour
     public Bullet bulletStats;
 
     [Header("Speed")]
-    public float startSpeed = 10f;          // designer default
+    public float startSpeed = 10f;
     public float lowerSpeedLimit = 1f;
     public float upperSpeedLimit = 75f;
 
-    // Derived/internal speed state
-    private float baseSpeed;                // permanent buffs/debuffs (e.g., Berserker)
-    private float currentSpeed;             // baseSpeed * slowMultiplier, clamped
-    public float speed                     // keep your existing public 'speed' property in sync
+    private float baseSpeed;        // permanent buffs/debuffs (e.g., Berserker)
+    private float currentSpeed;     // baseSpeed * slowMultiplier, clamped
+    public float speed
     {
         get => currentSpeed;
         private set => currentSpeed = value;
@@ -45,7 +44,7 @@ public class Enemy : MonoBehaviour
     public bool isRusher;
     public float rusherWaitTime;
     public bool isBerserker;
-    public float speedBoost = 1.2f; // e.g., 20% more
+    public float speedBoost = 1.2f;
 
     public bool isBoss = false;
     public bool isTank = false;
@@ -67,7 +66,6 @@ public class Enemy : MonoBehaviour
 
     public float damageResistance = 1f;
 
-    // Effect stacks tracking
     private int iceCheck = 0;
     private int slowCheck = 0;
     private int fireCheck = 0;
@@ -91,18 +89,14 @@ public class Enemy : MonoBehaviour
 
     void Start()
     {
-        SetBulletStats(GameObject.FindObjectOfType<Bullet>()); // if you really need this
+        SetBulletStats(GameObject.FindObjectOfType<Bullet>());
         baseSpeed = startSpeed;
-        RecomputeSpeed(); // initializes 'speed'
+        RecomputeSpeed();
         health = startHealth;
         waveSpawner = FindObjectOfType<WaveSpawner>();
         if (isSummoner)
-        {
             StartCoroutine(Summon(enemyToSummon, summonRate));
-        }
     }
-
-    // --- Speed helpers -------------------------------------------------------
 
     private float SlowMultiplierProduct()
     {
@@ -118,7 +112,7 @@ public class Enemy : MonoBehaviour
         currentSpeed = Mathf.Clamp(baseSpeed * slowMult, lowerSpeedLimit, upperSpeedLimit);
     }
 
-    private void ApplySlowFactor(float factor) // factor in (0,1] (e.g., 0.5f means 50% speed)
+    private void ApplySlowFactor(float factor) // factor in (0,1], e.g. 0.5f = 50% speed
     {
         slowFactors.Add(factor);
         isSlowed = true;
@@ -127,7 +121,7 @@ public class Enemy : MonoBehaviour
 
     private void RemoveSlowFactor(float factor)
     {
-        // Remove first occurrence of 'factor' (approx compare for float)
+        // Remove first occurrence; use Mathf.Approximately for float comparison
         for (int i = 0; i < slowFactors.Count; i++)
         {
             if (Mathf.Approximately(slowFactors[i], factor))
@@ -139,8 +133,6 @@ public class Enemy : MonoBehaviour
         if (slowFactors.Count == 0) isSlowed = false;
         RecomputeSpeed();
     }
-
-    // --- Game logic ----------------------------------------------------------
 
     public void UpdateDistanceTraveled(float distance)
     {
@@ -165,36 +157,27 @@ public class Enemy : MonoBehaviour
         }
 
         if (amount * damageResistance > damageThreshold)
-        {
             health -= amount * damageResistance;
-        }
 
         healthBar.fillAmount = health / startHealth;
 
         if (isHealer && healPool > 0)
-        {
             StartCoroutine(Heal(amount));
-        }
 
-        // Berserker: permanently increase baseSpeed (then clamp and apply slows)
+        // Berserker: permanently gains speed on each hit, clamped to upperSpeedLimit
         if (isBerserker)
         {
-            // only escalate if we have room to grow at the final clamped value
-            float prevBase = baseSpeed;
             baseSpeed *= Mathf.Max(1f, speedBoost);
             RecomputeSpeed();
-            // Ensure we don't exceed the cap (if so, cap the base)
             if (currentSpeed >= upperSpeedLimit)
             {
-                baseSpeed = Mathf.Min(baseSpeed, upperSpeedLimit); // cap base
+                baseSpeed = Mathf.Min(baseSpeed, upperSpeedLimit);
                 RecomputeSpeed();
             }
         }
 
         if (health <= 0 && !isDead)
-        {
             Die();
-        }
     }
 
     public void TakeFireDamage(float dot)
@@ -214,9 +197,7 @@ public class Enemy : MonoBehaviour
             poisonResistance += dot;
             poisonBar.fillAmount = poisonResistance / maxPoisonResistance;
             if (poisonResistance >= maxPoisonResistance)
-            {
                 Die();
-            }
         }
     }
 
@@ -238,7 +219,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    public void TakeSlowDamage(float slow) // 'slow' >= 1 means how strong the slow is (e.g., 1.5 = 33% slow)
+    public void TakeSlowDamage(float slow) // slow >= 1, e.g. 1.5 = 33% speed reduction
     {
         if (!immuneToSlow)
         {
@@ -250,9 +231,7 @@ public class Enemy : MonoBehaviour
     void Die()
     {
         if (!isDead)
-        {
             WaveSpawner.EnemiesAlive--;
-        }
 
         removeEffects();
 
@@ -274,22 +253,12 @@ public class Enemy : MonoBehaviour
             isDead = true;
             StartCoroutine(ghostDeath());
         }
-
-        //if (isBoss)
-        //{
-        //    int randomNum = Random.Range(1, 101);
-        //    if (randomNum >= 1 && randomNum <= dropChance)
-        //    {
-        //        WinRewards.numOfRewards++;
-        //    }
-        //}
     }
 
     public void removeEffects()
     {
-        StopAllCoroutines(); // safest: stop running DOTs/slows/etc.
+        StopAllCoroutines(); // stops all running DOTs and slows
 
-        // Reset flags/counters
         isBleeding = false;
         isFrozen = false;
         isOnFire = false;
@@ -300,17 +269,10 @@ public class Enemy : MonoBehaviour
         iceCheck = 0;
         slowCheck = 0;
 
-        // Reset DOT visuals/bars
-        // poisonBar stays where it is unless you want to clear it:
-        // poisonResistance = 0f; poisonBar.fillAmount = 0f;
-
-        // Clear slows & reset speed to base caps
         slowFactors.Clear();
         baseSpeed = Mathf.Clamp(baseSpeed, lowerSpeedLimit, upperSpeedLimit);
         RecomputeSpeed();
     }
-
-    // --- Coroutines ----------------------------------------------------------
 
     private IEnumerator Bleed(float damageToTake)
     {
@@ -346,7 +308,7 @@ public class Enemy : MonoBehaviour
     private IEnumerator Ice(float brittleEffect)
     {
         iceCheck++;
-        damageResistance += brittleEffect; // higher resistance = takes more damage? (keeping your logic)
+        damageResistance += brittleEffect;
         yield return new WaitForSeconds(5f);
         damageResistance -= brittleEffect;
         iceCheck--;
@@ -359,8 +321,7 @@ public class Enemy : MonoBehaviour
 
     private IEnumerator Slow(float slow)
     {
-        // Convert your 'slow' (>=1) to a speed factor in (0,1]:  slow=1.5 => factor=1/1.5 = 0.666...
-        // Clamp to avoid divide-by-zero or negative values.
+        // Convert slow strength (>=1) to a multiplicative speed factor in (0,1]
         float factor = 1f / Mathf.Max(1f, slow);
 
         slowCheck++;
@@ -387,9 +348,7 @@ public class Enemy : MonoBehaviour
 
         Renderer renderer = GetComponent<Renderer>();
         if (renderer != null && ghostPostDeath != null)
-        {
             renderer.material = ghostPostDeath;
-        }
 
         this.tag = "Ghost";
 
@@ -432,10 +391,4 @@ public class Enemy : MonoBehaviour
             }
         }
     }
-
-    // ------------------------------------------------------------------------
-    // NOTE: Wherever your pathing/movement code consumes 'speed', it will now
-    //       get a clamped, correctly recomputed value every time an effect
-    //       starts/ends or Berserker triggers.
-    // ------------------------------------------------------------------------
 }

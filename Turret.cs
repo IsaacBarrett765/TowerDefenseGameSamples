@@ -49,8 +49,6 @@ public class Turret : MonoBehaviour
     public GameObject topBackLeft; //23
     public GameObject topBackMiddle; //24
     public GameObject topBackRight; //25
-    
-
 
     [Header("Targeting Modes")]
     public bool useFirstTargeting = true;
@@ -101,7 +99,6 @@ public class Turret : MonoBehaviour
     public float turnSpeed = 10f;
     public Transform firePoint;
 
-    // --- Responsiveness controls ---
     [Header("Targeting Performance")]
     [Tooltip("Minimum delay between target scans (reacquires even if a target is already locked).")]
     public float scanInterval = 0.1f;
@@ -113,7 +110,6 @@ public class Turret : MonoBehaviour
     [Tooltip("Optional: restrict scanning to this enemy LayerMask for performance.")]
     public LayerMask enemyLayer = ~0;
 
-    // Optional preallocated buffer (tweak size to your max expected enemies in range)
     private static readonly Collider[] scanBuffer = new Collider[256];
 
     void Awake()
@@ -124,23 +120,21 @@ public class Turret : MonoBehaviour
 
     void Start()
     {
-        // Initial scan
         TryAcquireTarget(force: true);
     }
 
     void Update()
     {
-        // Tick fire cooldown
         fireCountdown = Mathf.Max(0f, fireCountdown - Time.deltaTime);
 
-        // Re-evaluate best target on interval — EVEN if current target is valid.
+        // Re-evaluate best target on interval — even if current target is still valid.
         if (Time.time >= nextScanTime)
         {
             EvaluateAndMaybeSwapTarget();
             nextScanTime = Time.time + scanInterval;
         }
 
-        // If target missing/invalid/out of range, try immediately to grab a new one (without waiting for nextScanTime)
+        // If target is missing or out of range, reacquire immediately without waiting for the scan interval.
         if (!IsTargetValid(targetEnemy))
         {
             ClearTarget();
@@ -161,13 +155,11 @@ public class Turret : MonoBehaviour
             HandleShooting();
     }
 
-    // ---------- Compatibility wrapper for older code ----------
     public void UpdateTarget()
     {
         TryAcquireTarget(force: true);
     }
 
-    // ---------- Targeting ----------
     bool IsTargetValid(Enemy e)
     {
         if (e == null || e.transform == null) return false;
@@ -188,23 +180,21 @@ public class Turret : MonoBehaviour
     /// </summary>
     float ScoreEnemy(Enemy enemy)
     {
-        // Common terms
         float distSqr = (enemy.transform.position - transform.position).sqrMagnitude;
 
-        // Modes:
-        if (useFirstTargeting)     return enemy.distanceTraveled;          // more progress = better
-        if (useLastTargeting)      return -enemy.distanceTraveled;         // less progress = better
-        if (useFarthestTargeting)  return distSqr;                          // larger distance = better
-        if (useClosestTargeting)   return -distSqr;                         // smaller distance = better
-        if (useStrongestTargeting) return enemy.health;                     // higher HP = better
-        if (useWeakestTargeting)   return -enemy.health;                    // lower HP = better
+        if (useFirstTargeting)     return enemy.distanceTraveled;   // more progress = better
+        if (useLastTargeting)      return -enemy.distanceTraveled;  // less progress = better
+        if (useFarthestTargeting)  return distSqr;                  // larger distance = better
+        if (useClosestTargeting)   return -distSqr;                 // smaller distance = better
+        if (useStrongestTargeting) return enemy.health;             // higher HP = better
+        if (useWeakestTargeting)   return -enemy.health;            // lower HP = better
 
         // Default = closest
         return -distSqr;
     }
 
     /// <summary>
-    /// Re-scan and swap if there is a clearly better target than the current one.
+    /// Re-scans and swaps to a better target if one exists, with a hysteresis threshold to prevent jitter.
     /// </summary>
     void EvaluateAndMaybeSwapTarget()
     {
@@ -224,9 +214,7 @@ public class Turret : MonoBehaviour
             var enemy = go.GetComponent<Enemy>();
             if (enemy == null || enemy.health <= 0f) continue;
 
-            // Score it
             float score = ScoreEnemy(enemy);
-
             if (score > bestScore)
             {
                 bestScore = score;
@@ -234,34 +222,25 @@ public class Turret : MonoBehaviour
             }
         }
 
-        // If nothing found, clear & bail
         if (bestGO == null)
         {
             ClearTarget();
             return;
         }
 
-        // If we have a current target, only swap if "meaningfully" better
         if (targetEnemy != null && IsTargetValid(targetEnemy))
         {
             float currentScore = ScoreEnemy(targetEnemy);
 
-            // Require a modest improvement to avoid jitter (e.g., 2%)
-            // If currentScore could be negative, compare difference instead of relative improvement.
             bool shouldSwap;
             if (Mathf.Abs(currentScore) < 0.0001f)
-            {
                 shouldSwap = (bestScore - currentScore) > 0.0001f;
-            }
             else
-            {
                 shouldSwap = (bestScore > currentScore * (1f + swapHysteresis));
-            }
 
             if (!shouldSwap) return;
         }
 
-        // Assign new target
         target = bestGO.transform;
         targetEnemy = bestGO.GetComponent<Enemy>();
     }
@@ -305,7 +284,6 @@ public class Turret : MonoBehaviour
         }
     }
 
-    // ---------- Laser / Shooting ----------
     void DisableLaser()
     {
         if (lineRenderer != null && lineRenderer.enabled)
@@ -360,7 +338,6 @@ public class Turret : MonoBehaviour
             Shoot((int)(numberOfBullets * numberOfBulletsMultiplier));
             fireCountdown = 1f / Mathf.Max(0.0001f, (fireRate * fireRateMultiplier));
         }
-        // cooldown tick is in Update()
     }
 
     void Shoot(int numberOfBullets)
@@ -397,7 +374,8 @@ public class Turret : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, range);
     }
 
-    public Vector3 GetUpgradePosition(int location){
+    public Vector3 GetUpgradePosition(int location)
+    {
         if(location == 1) return barrel.transform.position;
         else if(location == 2) return barrelTip.transform.position;
         else if(location == 3) return barrelUnder.transform.position;

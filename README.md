@@ -23,3 +23,5 @@ Wave management using coroutines. Each wave defines enemy types, counts, and spa
 ---
 
 *This project is in active development and not yet released. Full source is not available.*
+
+*Note: I am the original author of these scripts. I used AI tools (ChatGPT/Claude) to help with code cleanup and polish.*
